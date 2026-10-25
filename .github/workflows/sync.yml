@@ -1,0 +1,40 @@
+name: Synchronisation EDT CESI
+
+on:
+  schedule:
+    - cron: '0 * * * *' # Toutes les heures
+  workflow_dispatch: # Permet de le lancer manuellement en 1 clic
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout du dépôt
+        uses: actions/checkout@v4
+
+      - name: Installation de Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Installation des dépendances et Playwright
+        run: |
+          pip install -r requirements.txt
+          playwright install --with-deps chromium
+
+      - name: Récupération de l'EDT et génération de l'ICS
+        env:
+          CESI_EMAIL: ${{ secrets.CESI_EMAIL }}
+          CESI_PASSWORD: ${{ secrets.CESI_PASSWORD }}
+          CODE_PERSONNE: "2491326"
+        run: python sync_cesi.py
+
+      - name: Sauvegarde du fichier edt_cesi.ics sur le dépôt
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add edt_cesi.ics
+          git diff --quiet && git diff --staged --quiet || (git commit -m "Mise à jour auto EDT" && git push)
