@@ -1,4 +1,5 @@
 import os
+import time
 from datetime import datetime, timedelta
 from playwright.sync_api import sync_playwright
 from ics import Calendar, Event
@@ -8,10 +9,6 @@ CESI_PASSWORD = os.environ.get("CESI_PASSWORD")
 CODE_PERSONNE = os.environ.get("CODE_PERSONNE", "2491326")
 
 def fetch_schedule():
-    start_date = (datetime.now() - timedelta(days=15)).strftime("%Y-%m-%d")
-    end_date = (datetime.now() + timedelta(days=180)).strftime("%Y-%m-%d")
-    api_url = f"https://ent.cesi.fr/api/seance/all?start={start_date}&end={end_date}&codePersonne={CODE_PERSONNE}"
-
     with sync_playwright() as p:
         browser = p.chromium.launch(headless=True)
         context = browser.new_context()
@@ -19,65 +16,56 @@ def fetch_schedule():
 
         print("1. Accès direct au portail d'identification CESI...")
         page.goto("https://ent.cesi.fr/identification/", wait_until="networkidle")
-        print(f"   -> URL atteinte : {page.url}")
 
-        try:
-            # Cas 1 : Page de sélection ou d'accueil CAS où il faut entrer son login/email d'abord
-            email_selector = 'input[type="email"], input[name="login"], input[id="userNameInput"], input[name="UserName"], input[type="text"]'
-            page.wait_for_selector(email_selector, timeout=15000)
-            print(f"   -> Saisie de l'identifiant sur {page.url}...")
-            page.fill(email_selector, CESI_EMAIL)
+        # Saisie de l'email sur le WAYF
+        email_selector = 'input[type="email"], input[name="login"], input[id="userNameInput"], input[name="UserName"], input[type="text"]'
+        page.wait_for_selector(email_selector, timeout=15000)
+        page.fill(email_selector, CESI_EMAIL)
+        page.click('input[type="submit"], button[type="submit"], #idSIButton9')
+        page.wait_for_load_state("networkidle")
 
-            # Vérifier si le champ mot de passe est déjà visible sur la même page (ex: ADFS sts.cesi.fr)
-            pwd_selector = 'input[type="password"], input[id="passwordInput"], input[name="Password"]'
-            if page.locator(pwd_selector).is_visible():
-                print("   -> Champ mot de passe présent sur la même page, saisie...")
-                page.fill(pwd_selector, CESI_PASSWORD)
-                submit_selector = 'span[id="submitButton"], input[type="submit"], button[type="submit"]'
-                page.click(submit_selector)
+        # Saisie du mot de passe sur ADFS (sts.viacesi.fr)
+        pwd_selector = 'input[type="password"], input[id="passwordInput"], input[name="Password"]'
+        page.wait_for_selector(pwd_selector, timeout=15000)
+        page.fill(pwd_selector, CESI_PASSWORD)
+        page.click('span[id="submitButton"], input[type="submit"], button[type="submit"], #idSIButton9')
+
+        page.wait_for_url("**/ent.cesi.fr/**", timeout=20000)
+        print(f"2. Authentification réussie ! URL : {page.url}")
+
+        # Initialiser le contexte de la page emploi du temps
+        page.goto("https://ent.cesi.fr/mon-emploi-du-temps", wait_until="networkidle")
+
+        print("3. Récupération des séances par tranches de 7 jours...")
+        all_seances = {}
+        base_date = datetime.now() - timedelta(days=7)
+
+        # On récupère 24 semaines (environ 5 mois et demi) par tranches de 7 jours
+        for week in range(24):
+            s_date = (base_date + timedelta(days=week * 7)).strftime("%Y-%m-%d")
+            e_date = (base_date + timedelta(days=(week + 1) * 7)).strftime("%Y-%m-%d")
+            ts = int(time.time() * 1000)
+            api_url = f"https://ent.cesi.fr/api/seance/all?start={s_date}&end={e_date}&codePersonne={CODE_PERSONNE}&_={ts}"
+
+            response = page.request.get(
+                api_url,
+                headers={
+                    "Accept": "application/json, text/javascript, */*; q=0.01",
+                    "X-Requested-With": "XMLHttpRequest",
+                    "Referer": "https://ent.cesi.fr/mon-emploi-du-temps"
+                }
+            )
+
+            if response.status == 200:
+                items = response.json()
+                for item in items:
+                    all_seances[item.get("code")] = item
             else:
-                # Sinon on valide d'abord l'email (redirection vers ADFS ou Microsoft)
-                submit_selector = 'input[type="submit"], button[type="submit"], #idSIButton9'
-                page.click(submit_selector)
-                page.wait_for_load_state("networkidle")
-                print(f"   -> URL après saisie de l'email : {page.url}")
+                print(f"   [!] Tranche {s_date} -> {e_date} : HTTP {response.status} ({response.text()[:150]})")
 
-                # Si le champ identifiant est pré-rempli ou redemandé sur ADFS (sts.cesi.fr)
-                if page.locator('input[id="userNameInput"]').is_visible():
-                    page.fill('input[id="userNameInput"]', CESI_EMAIL)
-
-                # Attente et saisie du mot de passe
-                page.wait_for_selector(pwd_selector, timeout=15000)
-                print(f"   -> Saisie du mot de passe sur {page.url}...")
-                page.fill(pwd_selector, CESI_PASSWORD)
-
-                submit_pwd = 'span[id="submitButton"], input[type="submit"], button[type="submit"], #idSIButton9'
-                page.click(submit_pwd)
-
-            # Gérer l'écran éventuel "Rester connecté ?" de Microsoft
-            page.wait_for_timeout(3000)
-            print(f"   -> URL après validation du mot de passe : {page.url}")
-            if page.locator('input[id="idSIButton9"]').is_visible():
-                page.click('input[id="idSIButton9"]')
-
-            # Attendre le retour sur ent.cesi.fr
-            page.wait_for_url("**/ent.cesi.fr/**", timeout=20000)
-            print(f"2. Authentification réussie ! URL finale : {page.url}")
-
-        except Exception as e:
-            print(f"Erreur détaillée pendant le login (URL actuelle = {page.url}) : {e}")
-            # Affiche les champs présents sur la page pour débugger immédiatement si besoin
-            inputs = page.eval_on_selector_all("input, button, a", "els => els.map(e => ({tag: e.tagName, id: e.id, name: e.name, type: e.type, text: e.innerText.slice(0,30)}))")
-            print(f"Éléments détectés sur la page : {inputs}")
-
-        print(f"3. Récupération du JSON via {api_url}...")
-        response = page.request.get(api_url)
-        if response.status != 200:
-            raise Exception(f"Erreur API HTTP {response.status}")
-
-        data = response.json()
         browser.close()
-        return data
+        print(f"   -> Total récupéré : {len(all_seances)} séances uniques.")
+        return list(all_seances.values())
 
 def generate_ics(seances):
     cal = Calendar()
