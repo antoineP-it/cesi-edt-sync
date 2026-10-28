@@ -594,9 +594,9 @@ SUMMARY:CESI
 UID:cesi-4745474@ent.cesi.fr
 END:VEVENT
 BEGIN:VEVENT
-DESCRIPTION:Salle(s) : OPIBUS\nGroupe : FISA INFO 25 28 Rouen - Groupe session complète
+DESCRIPTION:Salle(s) : N107 Box\, OPIBUS\nGroupe : FISA INFO 25 28 Rouen - Groupe session complète
 DTEND:20261028T163000Z
-LOCATION:OPIBUS
+LOCATION:N107 Box\, OPIBUS
 DTSTART:20261028T140000Z
 SUMMARY:Autonomie
 UID:cesi-5196320@ent.cesi.fr
@@ -1026,9 +1026,9 @@ SUMMARY:CESI
 UID:cesi-4745452@ent.cesi.fr
 END:VEVENT
 BEGIN:VEVENT
-DESCRIPTION:Intervenant(s) : Antoine ROUSSEL\nSalle(s) : OPIBUS\nGroupe : FISA INFO 25 28 Rouen - Groupe session complète
+DESCRIPTION:Intervenant(s) : Antoine ROUSSEL\nSalle(s) : N107 Box\, OPIBUS\nGroupe : FISA INFO 25 28 Rouen - Groupe session complète
 DTEND:20261028T140000Z
-LOCATION:OPIBUS
+LOCATION:N107 Box\, OPIBUS
 DTSTART:20261028T123000Z
 SUMMARY:Bilan birefing
 UID:cesi-5196299@ent.cesi.fr
