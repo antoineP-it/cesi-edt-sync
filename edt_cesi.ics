@@ -2,14 +2,6 @@ BEGIN:VCALENDAR
 VERSION:2.0
 PRODID:ics.py - http://git.io/lLljaA
 BEGIN:VEVENT
-DESCRIPTION:Intervenant(s) : Grégoire INES\nSalle(s) : N205 Scale Up\nGroupe : FISA INFO 25 28 Rouen - Groupe session complète
-DTEND:20261020T143000Z
-LOCATION:N205 Scale Up
-DTSTART:20261020T113000Z
-SUMMARY:Workshop 1-Modélisation multidimensionnelle
-UID:cesi-4745426@ent.cesi.fr
-END:VEVENT
-BEGIN:VEVENT
 DESCRIPTION:Salle(s) : N111 Scale Up\nGroupe : FISA INFO 25 28 Rouen - Groupe session complète
 DTEND:20261104T163000Z
 LOCATION:N111 Scale Up
@@ -272,14 +264,6 @@ LOCATION:N101A FISA\, N103B FISA
 DTSTART:20261113T123000Z
 SUMMARY:REX
 UID:cesi-4745447@ent.cesi.fr
-END:VEVENT
-BEGIN:VEVENT
-DESCRIPTION:Salle(s) : N205 Scale Up\nGroupe : FISA INFO 25 28 Rouen - Groupe session complète
-DTEND:20261020T153000Z
-LOCATION:N205 Scale Up
-DTSTART:20261020T143000Z
-SUMMARY:Autonomie
-UID:cesi-5164784@ent.cesi.fr
 END:VEVENT
 BEGIN:VEVENT
 DESCRIPTION:Intervenant(s) : Antoine ROUSSEL\nSalle(s) : N205 Scale Up\nGroupe : FISA INFO 25 28 Rouen - Groupe session complète
@@ -755,14 +739,6 @@ LOCATION:OPIBUS
 DTSTART:20261028T100000Z
 SUMMARY:Autonomie
 UID:cesi-5164791@ent.cesi.fr
-END:VEVENT
-BEGIN:VEVENT
-DESCRIPTION:Salle(s) : N205 Scale Up\nGroupe : FISA INFO 25 28 Rouen - Groupe session complète
-DTEND:20261020T103000Z
-LOCATION:N205 Scale Up
-DTSTART:20261020T063000Z
-SUMMARY:Autonomie/Projet
-UID:cesi-4745425@ent.cesi.fr
 END:VEVENT
 BEGIN:VEVENT
 DESCRIPTION:Intervenant(s) : Antoine ROUSSEL\nSalle(s) : N111 Scale Up\nGroupe : FISA INFO 25 28 Rouen - Groupe session complète
